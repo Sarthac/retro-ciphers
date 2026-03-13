@@ -16,6 +16,7 @@ The following ciphers are implemented:
 - PolybiusSquare: A substitution cipher that uses a 5x5 grid to represent each letter.
 """
 
+
 class Atbash(MonoalphabeticSubstitution):
     def __init__(self):
         super().__init__(string.ascii_lowercase[::-1])
@@ -25,9 +26,12 @@ class Shift(MonoalphabeticSubstitution):
     def __init__(self, shift: int):
         # The modulo ensures shifts larger than 26 wrap around safely
         base = string.ascii_lowercase
-        shift = shift % len(base)
-        cipher_alphabet: str = base[shift:] + base[:shift]
+        self.shift = shift % len(base)
+        cipher_alphabet: str = base[self.shift :] + base[: self.shift]
         super().__init__(cipher_alphabet)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(shift={self.shift})"
 
 
 class Caesar(Shift):
@@ -50,29 +54,37 @@ class MixedAlphabet(MonoalphabeticSubstitution):
 
     def __init__(self, keyword: str) -> None:
         # removing duplicate letter in the keyword to make the cipher_alphanet 26 chars
-        keyword_clean = "".join(filter(str.isalpha, keyword.lower()))
-        unique_keyword = list(dict.fromkeys(keyword_clean))
-        cipher_alphabet = unique_keyword
+        self.keyword = "".join(filter(str.isalpha, keyword.lower()))
+        # make keyword unique so the cipher alphanet does not include dublicates and it should 26 exact
+        clean_keyword = list(dict.fromkeys(self.keyword))
+        cipher_alphabet = clean_keyword
         for letter in string.ascii_lowercase:
             if letter not in cipher_alphabet:
                 cipher_alphabet.append(letter)
 
         super().__init__(cipher_alphabet)
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(keyword={self.keyword!r})"
+
 
 class SimpleSubstitution(MonoalphabeticSubstitution):
     """
     A substitution cipher with a randomly generated or user-defined cipher alphabet.
     """
+
     # user need to know the cipher_alphabet as it is a key to cipher and decipher.
     # user provide one or generate one using a static method.
     def __init__(self, cipher_alphabet: str) -> None:
-        if len(dict.fromkeys(c.lower() for c in cipher_alphabet)) != 26 or len(cipher_alphabet) != 26:
+        if (
+            len(dict.fromkeys(c.lower() for c in cipher_alphabet)) != 26
+            or len(cipher_alphabet) != 26
+        ):
             raise ValueError(
                 "cipher_alphabets must be unqiue and 26 char long OR generate one by executing 'SimpleSubstitution.generate_cipher_alphabet()'"
             )
-
-        super().__init__(cipher_alphabet)
+        self.cipher_alphabet = cipher_alphabet
+        super().__init__(self.cipher_alphabet)
 
     @staticmethod
     def generate_cipher_alphabet() -> str:
@@ -83,6 +95,9 @@ class SimpleSubstitution(MonoalphabeticSubstitution):
             A string representing the random cipher alphabet.
         """
         return "".join(random.sample(string.ascii_lowercase, k=26))
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(cipher_alphabet={self.cipher_alphabet!r})"
 
 
 class Baconian(MonoalphabeticSubstitution):
@@ -155,8 +170,13 @@ class Baconian(MonoalphabeticSubstitution):
         Args:
             modern_implementation: Whether to use the modern or old implementation of the cipher.
         """
-        cipher_alphabet = self.modern_baconian_cipher if modern_implementation else self.classic_baconian_cipher
-        super().__init__(cipher_alphabet)
+        self.modern_implementation = modern_implementation
+        self.cipher_alphabet = (
+            self.modern_baconian_cipher
+            if self.modern_implementation
+            else self.classic_baconian_cipher
+        )
+        super().__init__(self.cipher_alphabet)
 
     @override
     def decipher(self, text: str) -> str:
@@ -176,6 +196,9 @@ class Baconian(MonoalphabeticSubstitution):
                 # switch index to next five chars
                 i += word_length
         return plain_text
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(modern_implementation={self.modern_implementation})"
 
 
 class PolybiusSquare(MonoalphabeticSubstitution):

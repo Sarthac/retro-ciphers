@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import string
 from typing import override, Sequence
+from itertools import cycle
 
 
 class Substitution(ABC):
@@ -42,22 +43,29 @@ class MonoalphabeticSubstitution(Substitution):
         self.reverse_mapping: dict = {v: k for k, v in self.mapping.items()}
 
     @override
-    def cipher(self, text: str) -> str:
-        return "".join(self.mapping.get(char, char) for char in text)
+    def cipher(self, text: str, omit_non_alpha: bool = False) -> str:
+        result: str = ""
+
+        for char in text:
+            if char.isalpha():
+                result += self.mapping[char]
+            elif not omit_non_alpha or (char in string.whitespace):
+                result += char
+
+        return result
 
     @override
     def decipher(self, text: str) -> str:
         return "".join(self.reverse_mapping.get(char, char) for char in text)
 
-    @override
     def __str__(self) -> str:
         base = string.ascii_letters
-        cipher = "".join(self.mapping.values())
+        cipher_mapping = "".join(self.mapping.values())
 
         return (
             f"--- {self.__class__.__name__} Cipher ---\n"
             f"Plain:  {base}\n"
-            f"Cipher: {cipher}\n"
+            f"Cipher: {cipher_mapping}\n"
         )
 
     def __eq__(self, other: object) -> bool:
@@ -65,3 +73,70 @@ class MonoalphabeticSubstitution(Substitution):
             return NotImplemented
         # Two ciphers are equal if their cipher_alphabet dictionaries are exactly the same
         return self.mapping == other.mapping
+
+
+class PolyalphabeticSubstitution(Substitution):
+    def __init__(self, key: str):
+        # Call the generation method as a standard function
+        self.tabula_recta = self._generate_table()
+        if not key:
+            raise ValueError("Key must not be empty.")
+        self.key = key.upper()
+        if not any(char.isalpha() for char in self.key):
+            raise ValueError("Key must contain at least one letter.")
+
+    def _generate_table(self) -> list[list[str]]:
+        """Create a square table of alphabets (Vigenère by default)."""
+        tabula_recta: list[list[str]] = []
+        for i in range(26):
+            tabula_recta.append(
+                list(string.ascii_uppercase[i:] + string.ascii_uppercase[:i])
+            )
+        return tabula_recta
+
+    def _get_key_sequence(self) -> list[int]:
+        """Maps the keyword to a sequence of shifts."""
+        clean_key = [char.upper() for char in self.key if char.isalpha()]
+        if not clean_key:
+            raise ValueError("Key must contain at least one letter.")
+        return [ord(char) - 65 for char in clean_key]
+
+    @override
+    def cipher(self, text: str, omit_non_alpha: bool = False) -> str:
+        result: str = ""
+        key_cycle = cycle(self._get_key_sequence())
+
+        for char in text.upper():
+            if char.isalpha():
+                key_char = next(key_cycle)
+                row = key_char
+                # convert text_char to int then -65 as the ascii upper letters start at 65, to get the index of the column.
+                column = ord(char) - 65
+                result += self.tabula_recta[row][column]
+
+            elif not omit_non_alpha or (char in string.whitespace):
+                result += char
+
+        return result
+
+    @override
+    def decipher(self, text: str) -> str:
+        result: str = ""
+        key_cycle = cycle(self._get_key_sequence())
+
+        for char in text.upper():
+            if char.isalpha():
+                key_char = next(key_cycle)
+                column = self.tabula_recta[key_char].index(char)
+                result += self.tabula_recta[0][column]
+            else:
+                result += char
+        return result
+
+    def __str__(self) -> str:
+        key = self.key
+
+        return f"--- {self.__class__.__name__} Cipher ---\n" f"Key:  {key!r}\n"
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(key={self.key!r})"

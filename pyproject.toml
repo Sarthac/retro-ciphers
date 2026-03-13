@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "retro-ciphers"
+version = "1.0.0"
+authors = [
+  { name="Sarthak Patil", email="mail@sarthak.co.in" },
+]
+description = "Classical ciphers implementation in python"
+requires-python = ">=3.12"
+dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Security :: Cryptography",
+    "Intended Audience :: Developers",
+    "Development Status :: 4 - Beta",
+    "Natural Language :: English",
+    "Typing :: Typed",
+    "Framework :: Hatchling",
+]
+license = "MIT"
+license-file = "LICENSE"
+readme = "README.md"
+keywords = ["retro ciphers", "ciphers", "cryptography", "caesar", "vigenere", "classical ciphers", "historical ciphers"]
+
+[project.urls]
+Homepage = "https://crypto.sarthak.co.in"
+Documentation = "https://github.com/sarthac/retro-ciphers"
+Repository = "https://github.com/sarthac/retro-ciphers.git"
+Issues = "https://github.com/sarthac/retro-ciphers/issues"
