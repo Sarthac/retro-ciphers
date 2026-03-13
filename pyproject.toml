@@ -21,7 +21,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Natural Language :: English",
     "Typing :: Typed",
-    "Framework :: Hatchling",
 ]
 license = "MIT"
 license-file = "LICENSE"
