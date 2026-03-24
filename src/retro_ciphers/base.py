@@ -5,7 +5,6 @@ Polyalphabetic substitution. These two substitutions cipher class implemented ci
 is used by most of ciphers algorithms without overriding it.
 """
 
-
 import string
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
@@ -15,6 +14,7 @@ from typing import override
 
 class Substitution(ABC):
     """A foundation class for different substitution classes."""
+
     @abstractmethod
     def cipher(self, text: str) -> str:
         """Converts plaintext into ciphertext.
@@ -66,13 +66,13 @@ class MonoalphabeticSubstitution(Substitution):
             cipher_alphabet (Sequence): A unique lower-case-26-character sequence.
         """
         # 1. Build the lowercase mapping
-        lower_base : str = string.ascii_lowercase
-        lower_cipher : list[str] = [char.lower() for char in cipher_alphabet]
-        lower_map : dict[str, str] = dict(zip(lower_base, lower_cipher))
+        lower_base: str = string.ascii_lowercase
+        lower_cipher: list[str] = [char.lower() for char in cipher_alphabet]
+        lower_map: dict[str, str] = dict(zip(lower_base, lower_cipher))
 
         # 2. Build the uppercase mapping
-        upper_base : str = string.ascii_uppercase
-        upper_cipher : list[str] = [char.upper() for char in cipher_alphabet]
+        upper_base: str = string.ascii_uppercase
+        upper_cipher: list[str] = [char.upper() for char in cipher_alphabet]
         upper_map: dict[str, str] = dict(zip(upper_base, upper_cipher))
 
         # 3. Merge them into a single 52-pair dictionary!
@@ -116,7 +116,7 @@ class MonoalphabeticSubstitution(Substitution):
 
         Returns:
             str: A plaintext / decipher string.
-                """
+        """
         return "".join(self.reverse_mapping.get(char, char) for char in text)
 
     def __str__(self) -> str:
@@ -128,11 +128,7 @@ class MonoalphabeticSubstitution(Substitution):
         base: str = string.ascii_letters
         cipher_mapping: str = "".join(self.mapping.values())
 
-        return (
-            f"--- {self.__class__.__name__} Cipher ---\n"
-            f"Plain:  {base}\n"
-            f"Cipher: {cipher_mapping}\n"
-        )
+        return f"--- {self.__class__.__name__} Cipher ---\nPlain:  {base}\nCipher: {cipher_mapping}\n"
 
     def __eq__(self, other: object) -> bool:
         """Compares two objects with their cipher_alphabets.
@@ -168,10 +164,10 @@ class PolyalphabeticSubstitution(Substitution):
             key (str): The key use to build cipher table(tabula_recta).
         """
         # Call the generation method as a standard function
-        self.tabula_recta : list[list[str]] = self._generate_table()
+        self.tabula_recta: list[list[str]] = self._generate_table()
         if not key:
             raise ValueError("Key must not be empty.")
-        self.key : str = key.upper()
+        self.key: str = key.upper()
         if not any(char.isalpha() for char in self.key):
             raise ValueError("Key must contain at least one letter.")
 
@@ -200,7 +196,9 @@ class PolyalphabeticSubstitution(Substitution):
         Raises:
             ValueError: If the key contains no alphabetic characters.
         """
-        clean_key : list[str] = [char.upper() for char in self.key if char.isalpha()]
+        clean_key: list[str] = [
+            char.upper() for char in self.key if char.isalpha()
+        ]
         if not clean_key:
             raise ValueError("Key must contain at least one letter.")
         # convert chr into int, 0-25
@@ -209,15 +207,15 @@ class PolyalphabeticSubstitution(Substitution):
     @override
     def cipher(self, text: str, omit_non_alpha: bool = False) -> str:
         result: str = ""
-        key_cycle : Iterator[int] = cycle(self._get_key_sequence())
+        key_cycle: Iterator[int] = cycle(self._get_key_sequence())
 
         for char in text.upper():
             if char.isalpha():
-                key_char : int = next(key_cycle)
-                row : int = key_char
+                key_char: int = next(key_cycle)
+                row: int = key_char
                 # convert text_char to int then -65 as the ascii upper letters start at 65,
                 # to get the index of the column.
-                column : int = ord(char) - 65
+                column: int = ord(char) - 65
                 result += self.tabula_recta[row][column]
 
             elif not omit_non_alpha or (char in string.whitespace):
@@ -228,12 +226,12 @@ class PolyalphabeticSubstitution(Substitution):
     @override
     def decipher(self, text: str) -> str:
         result: str = ""
-        key_cycle : Iterator[int] = cycle(self._get_key_sequence())
+        key_cycle: Iterator[int] = cycle(self._get_key_sequence())
 
         for char in text.upper():
             if char.isalpha():
-                key_char : int = next(key_cycle)
-                column : int = self.tabula_recta[key_char].index(char)
+                key_char: int = next(key_cycle)
+                column: int = self.tabula_recta[key_char].index(char)
                 result += self.tabula_recta[0][column]
             else:
                 result += char
@@ -245,9 +243,9 @@ class PolyalphabeticSubstitution(Substitution):
         Returns:
             str: Cipher class name and key.
         """
-        key : str = self.key
+        key: str = self.key
 
-        return f"--- {self.__class__.__name__} Cipher ---\n" f"Key:  {key!r}\n"
+        return f"--- {self.__class__.__name__} Cipher ---\nKey:  {key!r}\n"
 
     def __repr__(self) -> str:
         """Use to recreate instance of cipher class.
