@@ -8,7 +8,7 @@ is used by most of ciphers algorithms without overriding it.
 
 import string
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from itertools import cycle
 from typing import override
 
@@ -83,6 +83,9 @@ class MonoalphabeticSubstitution(Substitution):
     def cipher(self, text: str, omit_non_alpha: bool = False) -> str:
         """Converts plaintext into ciphertext.
 
+        Iterates through the plaintext character and get the appropriate value from map then append to result.
+        Non-alphabetic characters are either preserved or stripped based on the provided flag.
+
         Args:
             text (str): A plaintext string.
             omit_non_alpha (bool, optional): Defaults to False, removes non-alphabet characters if set to True.
@@ -104,6 +107,16 @@ class MonoalphabeticSubstitution(Substitution):
 
     @override
     def decipher(self, text: str) -> str:
+        """Converts ciphertext into plaintext.
+
+        Iterates through the ciphertext character and get the appropriate value from map then append to result.
+
+        Args:
+            text (str): A ciphertext string.
+
+        Returns:
+            str: A plaintext / decipher string.
+                """
         return "".join(self.reverse_mapping.get(char, char) for char in text)
 
     def __str__(self) -> str:
@@ -125,8 +138,7 @@ class MonoalphabeticSubstitution(Substitution):
         """Compares two objects with their cipher_alphabets.
 
         Useful in cipher algorithm such as MixedAlphabet, SimpleSubstitution, and Shift as their cipher_alphabet
-        changes depending on parameter it passed—Keyword that used in MixedAlphabet, Number(shift) provided in shift
-        and etc
+        changes depending on parameter it passes that used in MixedAlphabet, Number(shift) provided in shift etc.
 
         If both of object's cipher_alphabet are same which means their Keyword, Number(Shift) are same.
 
@@ -159,7 +171,7 @@ class PolyalphabeticSubstitution(Substitution):
         self.tabula_recta : list[list[str]] = self._generate_table()
         if not key:
             raise ValueError("Key must not be empty.")
-        self.key = key.upper()
+        self.key : str = key.upper()
         if not any(char.isalpha() for char in self.key):
             raise ValueError("Key must contain at least one letter.")
 
@@ -177,7 +189,17 @@ class PolyalphabeticSubstitution(Substitution):
         return tabula_recta
 
     def _get_key_sequence(self) -> list[int]:
-        """Maps the keyword to a sequence of shifts(int)."""
+        """Maps the keyword to a sequence of integer shifts.
+
+        Extracts all alphabetic characters from the underlying key, converts
+        them to uppercase, and maps them to a 0-25 integer range.
+
+        Returns:
+            list[int]: A list of shift values to be used by the cipher.
+
+        Raises:
+            ValueError: If the key contains no alphabetic characters.
+        """
         clean_key : list[str] = [char.upper() for char in self.key if char.isalpha()]
         if not clean_key:
             raise ValueError("Key must contain at least one letter.")
@@ -187,7 +209,7 @@ class PolyalphabeticSubstitution(Substitution):
     @override
     def cipher(self, text: str, omit_non_alpha: bool = False) -> str:
         result: str = ""
-        key_cycle = cycle(self._get_key_sequence())
+        key_cycle : Iterator[int] = cycle(self._get_key_sequence())
 
         for char in text.upper():
             if char.isalpha():
@@ -206,7 +228,7 @@ class PolyalphabeticSubstitution(Substitution):
     @override
     def decipher(self, text: str) -> str:
         result: str = ""
-        key_cycle = cycle(self._get_key_sequence())
+        key_cycle : Iterator[int] = cycle(self._get_key_sequence())
 
         for char in text.upper():
             if char.isalpha():
