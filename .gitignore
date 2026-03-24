@@ -4,3 +4,4 @@ __pycache__
 src/retro_ciphers/run.py
 .pipyrc
 dist/
+.idea
