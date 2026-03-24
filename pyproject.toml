@@ -32,3 +32,21 @@ Homepage = "https://crypto.sarthak.co.in"
 Documentation = "https://github.com/sarthac/retro-ciphers"
 Repository = "https://github.com/sarthac/retro-ciphers.git"
 Issues = "https://github.com/sarthac/retro-ciphers/issues"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.7",
+]
+
+[tool.ruff.lint]
+extend-select = [
+  "UP",
+    "D",
+    "I",
+    "C90",
+    "N",
+    "W"
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
