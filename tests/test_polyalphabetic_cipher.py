@@ -1,14 +1,20 @@
 import pytest
+
 from src.retro_ciphers.poly import (
-    PolyalphabeticSubstitution, Alberti, Trithemius,
-    Vigenere, Beaufort, Autokey
+    Alberti,
+    Autokey,
+    Beaufort,
+    PolyalphabeticSubstitution,
+    Trithemius,
+    Vigenere,
 )
+
 
 class TestPolyalphabeticSubstitution:
     def test_empty_key(self):
         with pytest.raises(ValueError, match="Key must not be empty."):
             PolyalphabeticSubstitution("")
-            
+
     def test_invalid_key(self):
         with pytest.raises(ValueError, match="Key must contain at least one letter."):
             Vigenere("123")
@@ -37,7 +43,7 @@ class TestAlbertiCipher:
         # 'h' is in inner disk. Attempting to decipher without outer disk char first raises KeyError.
         with pytest.raises(KeyError, match="Disk not initialized"):
             cipher.decipher("hello")
-            
+
     def test_missing_characters(self):
         cipher = Alberti("a")
         text = "HELLO WORLD ZEBRA! @#"

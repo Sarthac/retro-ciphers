@@ -3,14 +3,15 @@ import pytest
 
 from src.retro_ciphers.mono import (
     Atbash,
-    Shift,
-    Caesar,
-    Rot13,
-    MixedAlphabet,
-    SimpleSubstitution,
     Baconian,
+    Caesar,
+    MixedAlphabet,
     PolybiusSquare,
+    Rot13,
+    Shift,
+    SimpleSubstitution,
 )
+
 
 def test_atbash():
     cipher = Atbash()
@@ -93,10 +94,10 @@ def test_baconian_classic():
     # I and J are both abaaa.
     assert cipher.cipher("I") == "ABAAA"
     assert cipher.cipher("J") == "ABAAA"
-    # Decipher defaults to 'J' or 'I' because it's mapping the same token. 
+    # Decipher defaults to 'J' or 'I' because it's mapping the same token.
     # With dictionary iteration either might be last, but it maps consistently.
-    deciphered_I = cipher.decipher("ABAAA").upper()
-    assert deciphered_I in ["I", "J"]
+    deciphered_I = cipher.decipher("ABAAA").upper() #noqa : N806
+    assert deciphered_I in ["I", "J"] #noqa : N806
 
 def test_polybius_square():
     cipher = PolybiusSquare()
@@ -105,10 +106,10 @@ def test_polybius_square():
     assert cipher.cipher("I") == "24"
     assert cipher.cipher("J") == "24"
     assert cipher.decipher("24").upper() in ["I", "J"]
-    
+
     # Test non-alphabetic/non-numeric correctly falls back
     assert cipher.cipher("a1") == "111"
-    
+
     deciphered_spaced = cipher.decipher("11 24")
     assert deciphered_spaced == "A I" or deciphered_spaced == "A J"
 
