@@ -91,7 +91,7 @@ class MonoalphabeticSubstitution(Substitution):
             omit_non_alpha (bool, optional): Defaults to False, removes non-alphabet characters if set to True.
 
         Returns:
-            str: A ciphertext string.
+            str: A ciphertext String.
         """
         result: str = ""
 
@@ -206,6 +206,24 @@ class PolyalphabeticSubstitution(Substitution):
 
     @override
     def cipher(self, text: str, omit_non_alpha: bool = False) -> str:
+        """Uses Vigenere table.
+
+        A two-dimensional 26*26 table,i.e. row and column starts with A-Z. starting with second row and column
+        the letter shifted to left one and goes on as we proceed to next row and column. As we visit to 26th row
+        and column it starts with Z, A, B ... W, X, Y
+
+        To cipher a plain text, we take a character; look into column and take a first character from key and look into
+        the row now create an intersection to get a first cipher character, and we will continue this till we complete
+        ciphering whole plain text.
+
+        Args:
+            text (str): The text to be ciphered.
+            omit_non_alpha (bool, optional): Whether to omit non-alpha characters. Defaults to False; which means
+            don't omit non-alpha characters.
+
+        Returns:
+            str: A ciphered string.
+        """
         result: str = ""
         key_cycle: Iterator[int] = cycle(self._get_key_sequence())
 
@@ -225,12 +243,34 @@ class PolyalphabeticSubstitution(Substitution):
 
     @override
     def decipher(self, text: str) -> str:
+        """Uses Vigenere table.
+
+        Take a first character from the key, find that character into Vigenere table's row.
+        Now take first character from cipher text and look into that row's column.
+
+        for example:
+        Key = LEMON
+        Ciphertext = CIFFB
+
+        Key first letter = L
+        Ciphertext first letter = C
+
+        Use the Vigenere table, L in row and find C in that row, intersect with column, you will get : R,
+        continue this and plaintext will be RETRO.
+
+        Args:
+            text (str): The text to be ciphered.
+
+        Returns:
+            str: A plaintext / decipher string.
+        """
         result: str = ""
         key_cycle: Iterator[int] = cycle(self._get_key_sequence())
 
         for char in text.upper():
             if char.isalpha():
                 key_char: int = next(key_cycle)
+                # get the char position in tabula_recta row
                 column: int = self.tabula_recta[key_char].index(char)
                 result += self.tabula_recta[0][column]
             else:
