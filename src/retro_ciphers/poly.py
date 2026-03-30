@@ -1,18 +1,10 @@
-"""Polyalphabetic substitution ciphers uses multiple shift to produce cipher text.
+"""Polyalphabetic substitution ciphers using multiple shifts.
 
-Each cipher has different mechanism to utilize multiple shift.
+Each cipher in this module employs a different mechanism to utilize
+multiple shifts.
 
-The history of the Polyalphabetic substitution ciphers
-
-        Alberti cipher
-            ↓
-        Trithemius cipher
-            ↓
-        Vigenere cipher
-            ↓
-        Beaufort cipher
-            ↓
-        Autokey cipher
+Evolution of polyalphabetic substitution ciphers:
+    Alberti -> Trithemius -> Vigenère -> Beaufort -> Autokey
 """
 
 import random
@@ -25,59 +17,43 @@ from .base import PolyalphabeticSubstitution, Substitution
 
 
 class Alberti(Substitution):
-    """Uses a disk that has two disk, stack on each other to form one disk, that use to cipher text.
+    """A cipher using two stacked disks for encryption and decryption.
 
-    1. Outer disk is Capital letters, not moveable
-    2. Inner disk is small letters, moveable (possible to rotate)
+    The outer disk contains uppercase letters and is fixed, while the inner
+    disk contains lowercase letters and can rotate. Both parties agree on a
+    key character on the inner disk.
 
-    To cipher or decipher a text, both parties—the sender and receiver agree on the key that is respect to inner disk(smaller letter),
+    Encryption (Outer to Inner):
+        1. Align the inner key letter with a signal character on the outer
+           disk.
+        2. Record the signal character in the ciphertext.
+        3. Find the plaintext letter on the outer disk and its corresponding
+           letter on the inner disk.
+        4. Periodically change the alignment and record a new signal character.
 
-    In Alberti's original design, the Outer Disk is the Plaintext and the Inner Disk is the Ciphertext.
-
-
-    1). How to Encrypt (Outer -> Inner)
-
-    Because the outer disk represents your readable English, you always start looking there when encrypting.
-
-    1.  Align: Map the inner 'g' to the outer 'D'.(here 'g' is the key, both sender and receiver need to know, 'D' is
-        the outer disk only specify that the 'g' map to 'D', if receiver stumble upon next new capital letter, it is
-        time to map the 'g' with new capital letter)
-    2.  Signal: Write down 'D' in your ciphertext so the receiver knows the starting position.
-    3.  Cipher: Look for your Plaintext letter on the Outer Disk. Find the letter directly below it on the Inner
-        Disk and write that down.
-    4.  Switch: Decide to change the key. Map inner 'g' to outer 'M'.
-    5.  Signal & Cipher: Write down 'M' in your ciphertext, and then continue looking at the Outer Disk and writing
-        down the new matching letters from the Inner Disk.
-
-    2). How to Decrypt (Inner -> Outer)
-
-    When you receive the scrambled message, you are looking at the ciphertext, so you have to read it in reverse.
-
-    1.  Read the Signal: You see the first letter is 'D'.
-    2.  Align: You map your inner 'g' to the outer 'D'.
-    3.  Decipher: Look for the scrambled Ciphertext letter on the Inner Disk. Find the letter directly above it
-        on the Outer Disk and write that down to reveal the plain English.
-    4.  Read the Next Signal: You hit the letter 'M' in the ciphertext.
-    5.  Switch & Decipher: You rotate your inner 'g' to the outer 'M', and continue finding the ciphertext on the
-        Inner Disk and translating it to the Outer Disk.
+    Decryption (Inner to Outer):
+        1. Read the signal character from the ciphertext.
+        2. Align the inner key letter with this signal character.
+        3. Translate inner disk characters back to outer disk characters.
+        4. Update alignment when a new signal character (uppercase) is
+           encountered.
     """
 
     def __init__(
         self, key: str, frequency: int = 50, modern_implementation: bool = True
     ):
-        """Creates disk.
+        """Initializes the Alberti cipher disks.
 
         Args:
-            key (str): Initial key that must be a single character.
-            frequency (int, optional): How often rotate a key, Defaults to 50; which mean every after 50 characters.
-            modern_implementation (bool): Two implementation; takes boolean value, set to True to use modern; and
-                False to use old implementation.
-                1. modern: which include current English alphabet a-z.
-                2. old : which includes old alphabets that includes 20 latin characters + 4 numbers (1-4).
-                is for the historical purposes.
+            key (str): The inner disk key character.
+            frequency (int): How often to rotate the disk (every N characters).
+                Defaults to 50.
+            modern_implementation (bool): If True, uses the modern 'a-z'
+                alphabet. If False, uses the historical 1467 Latin replica.
+                Defaults to True.
 
-        Returns:
-            str: A ciphertext string.
+        Raises:
+            ValueError: If the key is not in the inner disk alphabet.
         """
         self.key: str = key
         self.frequency: int = frequency
@@ -94,18 +70,20 @@ class Alberti(Substitution):
             self.inner_disk_alphabets: str = "gklnprtuz&xysomqihfdbace"
 
         if self.key not in self.inner_disk_alphabets:
-            raise ValueError(f"Key '{self.key}' must be in the inner disk alphabets")
+            raise ValueError(f"Key '{self.key}'"
+                             f"must be in the inner disk alphabets")
 
     @override
     def cipher(self, text: str, omit_non_alpha: bool = False) -> str:
-        """Cipher text by mapping outer disk with inner disk.
+        """Encrypts text by mapping outer disk characters to the inner disk.
 
         Args:
-            text (str): plaintext to be ciphered.
-            omit_non_alpha (bool, optional): Whether to omit non-alphabet characters. Defaults to False.
+            text (str): The plaintext string to encrypt.
+            omit_non_alpha (bool): If True, non-alphabetic characters are
+                removed. Defaults to False.
 
         Returns:
-            str: A ciphertext string.
+            str: The resulting ciphertext string.
         """
         result: str = ""
 
@@ -133,13 +111,13 @@ class Alberti(Substitution):
 
     @override
     def decipher(self, text: str) -> str:
-        """Cipher text by mapping inner disk with outer disk.
+        """Decrypts text by mapping inner disk characters to the outer disk.
 
         Args:
-            text (str): plaintext to be ciphered.
+            text (str): The ciphertext string to decrypt.
 
         Returns:
-            str: decipher text / plaintext string.
+            str: The resulting plaintext string.
         """
         result: str = ""
         for char in text:
@@ -147,11 +125,13 @@ class Alberti(Substitution):
             if char in self.outer_disk_alphabets:
                 self.disk = self.create_disk(outer_key=char)
 
-            # If char is small letter, it means use the existing disk to decipher it.
+            # If char is small letter, it means use the existing disk
+            # to decipher it.
             elif char in self.inner_disk_alphabets:
                 if not self.disk:
                     raise KeyError(
-                        "Disk not initialized because ciphertext does not start with an outer key."
+                        "Disk not initialized because ciphertext does not"
+                        " start with an outer key."
                     )
                 result += self.disk[char]
 
@@ -162,10 +142,11 @@ class Alberti(Substitution):
         return result
 
     def generate(self):
-        """Generate a disk, change the outer_key to produce new disk to make the cipher harder for cryptanalysis.
+        """Generates a new disk alignment with a random outer key.
 
         Returns:
-            Dict[str, dict[str,str]]: outer key and a disk.
+            dict: A dictionary containing the 'outer_key' and the 'disk'
+                mapping.
         """
         # Safely pick a random outer key without IndexErrors
         outer_key = random.choice(self.outer_disk_alphabets)
@@ -177,13 +158,14 @@ class Alberti(Substitution):
         }
 
     def create_disk(self, outer_key: str):
-        """Utility method to produce disk based on the outer_key and inner_key that is self.key.
+        """Creates a disk mapping based on the outer key and the inner key.
 
         Args:
-            outer_key (str): outer_key to produce disk.
+            outer_key (str): The outer disk character to align with the inner
+                key.
 
         Returns:
-            Dict[str, str]: A disk that can use to cipher and decipher text.
+            dict[str, str]: A dictionary representing the disk mapping.
         """
         inner_index = self.inner_disk_alphabets.index(self.key)
         inner_disk_alphabets = (
@@ -197,17 +179,17 @@ class Alberti(Substitution):
             + self.outer_disk_alphabets[:outer_key_index]
         )
 
-        disk = dict(zip(outer_disk_alphabets, inner_disk_alphabets)) | dict(
-            zip(inner_disk_alphabets, outer_disk_alphabets)
-        )
+        disk = (dict(zip(outer_disk_alphabets, inner_disk_alphabets)) |
+                dict(zip(inner_disk_alphabets, outer_disk_alphabets)
+        ))
 
         return disk
 
     def __str__(self) -> str:
-        """Information of object that includes: key, frequency and modern_implementation.
+        """Returns the cipher settings, including key, frequency, and mode.
 
         Returns:
-            str : Prints information of object that includes: key, frequency and modern_implementation.
+            str: A formatted string with the cipher information.
         """
         mode: str = "Modern A-Z" if self.modern_implementation else "Historical 1467"
         return (
@@ -218,38 +200,38 @@ class Alberti(Substitution):
         )
 
     def __repr__(self) -> str:
-        """Recreate object.
+        """Returns a string representation to recreate the object.
 
         Returns:
-            str : class name with object parameters.
+            str: A string that can be used to recreate the instance.
         """
-        return f"AlbertiCipher(key={self.key!r}, frequency={self.frequency}, modern_implementation={self.modern_implementation})"
+        return (f"AlbertiCipher(key={self.key!r}, frequency={self.frequency},"
+                f" modern_implementation={self.modern_implementation})")
 
 
 class Trithemius(PolyalphabeticSubstitution):
-    """Inspired from the Alberti ciper but uses it own table, that make it unique.
+    """A polyalphabetic cipher that uses a progressive shift.
 
-    It creates it own key by the sequence of the input text letters, first letter will be A,
-    Second letter wil be B and so on, after the end of Z; it will start with A again.
+    Each character is shifted by its position in the text (0 for the first
+    character, 1 for the second, etc.), effectively using the alphabet as
+    a sequence of keys.
 
-    WIKI - https://en.wikipedia.org/wiki/Tabula_recta#Trithemius%20cipher
+    See: https://en.wikipedia.org/wiki/Tabula_recta#Trithemius_cipher
     """
 
     def __init__(self):
-        """Passes key in the super class."""
+        """Initializes the Trithemius cipher with the standard alphabet key."""
         super().__init__(key=string.ascii_uppercase)
 
     @override
     def decipher(self, text: str) -> str:
-        """Lookup row index 0 with column index.
-
-        Only column index need to be calculated in order to decipher the text.
+        """Decrypts the text using progressive shifts.
 
         Args:
-            text (str): text to decipher.
+            text (str): The ciphertext string to decrypt.
 
         Returns:
-            str: deciphered / Plain text.
+            str: The resulting plaintext string.
         """
         result: str = ""
         key_cycle: Iterator[int] = cycle(self._get_key_sequence())
@@ -257,7 +239,8 @@ class Trithemius(PolyalphabeticSubstitution):
         for char in text.upper():
             if char.isalpha():
                 key_char: int = next(key_cycle)
-                # converts char into int (0-25), -key_char to find the original plain char.
+                # converts char into int (0-25), -key_char to find the
+                # original plain char.
                 column: int = (ord(char) - 65) - key_char
                 result += self.tabula_recta[0][column]
             else:
@@ -266,26 +249,27 @@ class Trithemius(PolyalphabeticSubstitution):
 
     @override
     def __str__(self) -> str:
-        """Print class names.
-
-        Print only class name as it does calculate it own key, it does not need to provide a key.
+        """Returns the class name.
 
         Returns:
-            str: class name.
+            str: The name of the cipher class.
         """
         return f"{self.__class__.__name__}\n"
 
     @override
     def __repr__(self) -> str:
-        # __repr__ only exist to override its parent implementation, as parent implementation shows key,
-        # and Trithemius does need a key.
+        """Returns a string representation to recreate the object.
+
+        Returns:
+            str: A string representing the object.
+        """
         return f"{self.__class__.__name__}()"
 
 
 class Vigenere(PolyalphabeticSubstitution):
-    """An extension to Trithemius, uses a continuous Key till it map with each plaintext character; example: LEMONLEMONLEMON.
+    """An extension of Trithemius using a repeating keyword.
 
-    WIKI - https://en.wikipedia.org/wiki/Tabula_recta#Improvements and https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher
+    See: https://en.wikipedia.org/wiki/Vigenere_cipher
     """
 
     def __init__(self, key: str):  # noqa : D107
@@ -293,13 +277,12 @@ class Vigenere(PolyalphabeticSubstitution):
 
 
 class Beaufort(PolyalphabeticSubstitution):
-    """Similar to Vigenere but uses modified table.
+    """A variant of the Vigenère cipher using a reversed tabula recta.
 
-    Similar table size, two-dimensional 26*26 but reverse order starting with the letter Z-A in
-    the first row and Column. The letter shifted to left one and goes on as we proceed to next row and column.
-    As we visit to 26th row and column it starts with A, Z, Y ... D, C, B.
+    The table starts with 'Z-A' in the first row and column, and shifts
+    left progressively.
 
-    WIKI - https://en.wikipedia.org/wiki/Beaufort_cipher
+    See: https://en.wikipedia.org/wiki/Beaufort_cipher
     """
 
     def __init__(self, key: str):  # noqa : D107
@@ -307,15 +290,16 @@ class Beaufort(PolyalphabeticSubstitution):
 
     @override
     def _generate_table(self) -> list[list[str]]:
-        """Create a square table of alphabets for beaufort cipher, as it uses it own table implementation.
+        """Creates a reversed square table of alphabets for the Beaufort.
 
         Returns:
-            list[list[str]] : Two dimensional square table of alphabets for beaufort cipher.
+            list[list[str]]: A 26x26 square table of reversed alphabets.
         """
         tabula_recta: list[list[str]] = []
         for i in range(26):
             tabula_recta.append(
-                list(string.ascii_uppercase[i::-1] + string.ascii_uppercase[:i:-1])
+                list(string.ascii_uppercase[i::-1]
+                     + string.ascii_uppercase[:i:-1])
             )
         return tabula_recta
 
@@ -326,13 +310,12 @@ class Beaufort(PolyalphabeticSubstitution):
 
 
 class Autokey(PolyalphabeticSubstitution):
-    """Similar to Vigenere but uses different key mechanism.
+    """A polyalphabetic cipher that incorporates the message into the key.
 
-    Starts with a relatively-short keyword, the primer, and appends the message to it.
-    For example, if the keyword is QUEENLY and the message is 'attack at dawn', then the key would be
-    QUEENLYATTAC
+    It starts with a short keyword (the primer) and appends the plaintext
+    itself to form the key.
 
-    WIKI - https://en.wikipedia.org/wiki/Autokey_cipher
+    See: https://en.wikipedia.org/wiki/Autokey_cipher
     """
 
     def __init__(self, key: str):  # noqa : D107
@@ -340,6 +323,16 @@ class Autokey(PolyalphabeticSubstitution):
 
     @override
     def cipher(self, text: str, omit_non_alpha: bool = False) -> str:
+        """Encrypts text using the autokey mechanism.
+
+        Args:
+            text (str): The plaintext string to encrypt.
+            omit_non_alpha (bool): If True, non-alphabetic characters are
+                removed. Defaults to False.
+
+        Returns:
+            str: The resulting ciphertext string.
+        """
         result: str = ""
         # We start with our primer (e.g., the shifts for 'LEMON')
         key_sequence: list[int] = self._get_key_sequence()
@@ -365,26 +358,18 @@ class Autokey(PolyalphabeticSubstitution):
 
     @override
     def decipher(self, text: str) -> str:
-        """Uses Vigenere table.
+        """Decrypts text using the autokey mechanism.
 
-        Take a first character from the key, find that character into Vigenere table's row.
-        Now take first character from cipher text and look into that row's column.
-
-        for example:
-        Key = QUEENLYATTAC
-        Ciphertext = QNXEPVYTWTWP
-
-        Key first letter = Q
-        Ciphertext first letter = Q
-
-        Use the Vigenere table, Q in row and find Q in that row, intersect with column, you will get : A,
-        continue this and plaintext will be ATTACKATDAWN.
+        Example:
+            Key primer = QUEENLY, Ciphertext = QNXEPVYTWTWP
+            The decrypted letters are appended to the key to decrypt
+            subsequent characters.
 
         Args:
-            text (str): The text to be ciphered.
+            text (str): The ciphertext string to decrypt.
 
         Returns:
-            str: A plaintext / decipher string.
+            str: The resulting plaintext string.
         """
         result: str = ""
         # The receiver only starts with the primer ('LEMON')
@@ -397,7 +382,8 @@ class Autokey(PolyalphabeticSubstitution):
                 current_key_shift: int = key_sequence[key_index]
 
                 # 2. Decrypt the ciphertext back to the original letter
-                column: int = self.tabula_recta[current_key_shift].index(text_char)
+                column: int = (self.tabula_recta[current_key_shift].
+                               index(text_char))
                 decrypted_char: str = self.tabula_recta[0][column]
                 result += decrypted_char
 

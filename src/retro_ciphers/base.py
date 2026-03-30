@@ -1,8 +1,9 @@
-"""Base classes for uniform the operations of Monoalphabetic substitution and  Polyalphabetic substitution.
+"""Base classes to unify monoalphabetic and polyalphabetic operations.
 
-This module contains abstract Substitution class that is a foundation of Monoalphabetic substitution and
-Polyalphabetic substitution. These two substitutions cipher class implemented cipher and decipher method that
-is used by most of ciphers algorithms without overriding it.
+This module contains the abstract Substitution class, which serves as the
+foundation for monoalphabetic and polyalphabetic substitutions. These two
+substitution cipher classes implement the cipher and decipher methods used
+by most cipher algorithms without requiring overrides.
 """
 
 import string
@@ -13,17 +14,17 @@ from typing import override
 
 
 class Substitution(ABC):
-    """A foundation class for different substitution classes."""
+    """A base class for different substitution cipher implementations."""
 
     @abstractmethod
     def cipher(self, text: str) -> str:
         """Converts plaintext into ciphertext.
 
         Args:
-            text (str): A plaintext string.
+            text (str): The plaintext string to encrypt.
 
         Returns:
-            str: A ciphertext string.
+            str: The resulting ciphertext string.
         """
         pass
 
@@ -32,38 +33,39 @@ class Substitution(ABC):
         """Converts ciphertext into plaintext.
 
         Args:
-            text (str): A ciphertext string.
+            text (str): The ciphertext string to decrypt.
 
         Returns:
-            str: A plaintext / decipher string.
+            str: The resulting plaintext string.
         """
         pass
 
     def __call__(self, text: str) -> str:
-        """Allows the cipher object to call cipher method.
+        """Allows the cipher object to be called directly.
 
         Args:
-            text (str): A plaintext string.
+            text (str): The plaintext string to encrypt.
 
         Returns:
-            str: A ciphertext string.
+            str: The resulting ciphertext string.
         """
         return self.cipher(text)
 
 
 class MonoalphabeticSubstitution(Substitution):
-    """A base class for creating Monoalphabetic substitution ciphers."""
+    """A base class for creating monoalphabetic substitution ciphers."""
 
     def __init__(self, cipher_alphabet: Sequence[str]) -> None:
-        """Initializes a MonoalphabeticSubstitution object. and builds a map.
+        """Initializes a MonoalphabeticSubstitution object and builds a map.
 
-        Takes a unique lower-case-26-character alphabet sequence that must be produce and provide by each of
-        the child class cipher algorithm then builds a map with provided unique alphabet with a-z 26-character.
-        for upper-case, converts provided unique lower-case-26-character alphabet into upper-case and maps with
-        A-Z 26-character.
+        Takes a unique 26-character lowercase alphabet sequence provided by a
+        subclass algorithm and builds a mapping with the standard 'a-z'
+        alphabet. For uppercase characters, it converts the sequence and maps
+        it to 'A-Z'.
 
         Args:
-            cipher_alphabet (Sequence): A unique lower-case-26-character sequence.
+            cipher_alphabet (Sequence[str]): A unique 26-character lowercase
+                sequence.
         """
         # 1. Build the lowercase mapping
         lower_base: str = string.ascii_lowercase
@@ -83,15 +85,17 @@ class MonoalphabeticSubstitution(Substitution):
     def cipher(self, text: str, omit_non_alpha: bool = False) -> str:
         """Converts plaintext into ciphertext.
 
-        Iterates through the plaintext character and get the appropriate value from map then append to result.
-        Non-alphabetic characters are either preserved or stripped based on the provided flag.
+        Iterates through the plaintext characters, retrieves the mapped value,
+        and appends it to the result. Non-alphabetic characters are either
+        preserved or stripped based on the provided flag.
 
         Args:
-            text (str): A plaintext string.
-            omit_non_alpha (bool, optional): Defaults to False, removes non-alphabet characters if set to True.
+            text (str): The plaintext string to encrypt.
+            omit_non_alpha (bool): If True, non-alphabetic characters are
+                removed. Defaults to False.
 
         Returns:
-            str: A ciphertext String.
+            str: The resulting ciphertext string.
         """
         result: str = ""
 
@@ -99,7 +103,8 @@ class MonoalphabeticSubstitution(Substitution):
             if char.isalpha():
                 # add char's value to result with respect to key-value pair
                 result += self.mapping[char]
-            # adds whitespace into results, and symbols if omit_non_alpha is False; removes it otherwise
+            # adds whitespace into results, and symbols if omit_non_alpha
+            # is False; removes it otherwise
             elif not omit_non_alpha or (char in string.whitespace):
                 result += char
 
@@ -109,59 +114,64 @@ class MonoalphabeticSubstitution(Substitution):
     def decipher(self, text: str) -> str:
         """Converts ciphertext into plaintext.
 
-        Iterates through the ciphertext character and get the appropriate value from map then append to result.
+        Iterates through the ciphertext characters, retrieves the mapped value
+        from the reverse map, and appends it to the result.
 
         Args:
-            text (str): A ciphertext string.
+            text (str): The ciphertext string to decrypt.
 
         Returns:
-            str: A plaintext / decipher string.
+            str: The resulting plaintext string.
         """
         return "".join(self.reverse_mapping.get(char, char) for char in text)
 
     def __str__(self) -> str:
-        """Prints plain_alphabet and its respected cipher_alphabet.
+        """Returns the plaintext alphabet and its corresponding cipher alphabet.
 
         Returns:
-            str: A plain_alphabet and its respected cipher_alphabet.
+            str: A string showing the plaintext and cipher alphabet mappings.
         """
         base: str = string.ascii_letters
         cipher_mapping: str = "".join(self.mapping.values())
 
-        return f"--- {self.__class__.__name__} Cipher ---\nPlain:  {base}\nCipher: {cipher_mapping}\n"
+        return (f"--- {self.__class__.__name__} Cipher ---"
+                f"\nPlain:  {base}\nCipher: {cipher_mapping}\n")
 
     def __eq__(self, other: object) -> bool:
-        """Compares two objects with their cipher_alphabets.
+        """Compares two cipher objects based on their cipher alphabets.
 
-        Useful in cipher algorithm such as MixedAlphabet, SimpleSubstitution, and Shift as their cipher_alphabet
-        changes depending on parameter it passes that used in MixedAlphabet, Number(shift) provided in shift etc.
+        This is useful for algorithms like MixedAlphabet, SimpleSubstitution,
+        and Shift, where the cipher alphabet depends on parameters like
+        keywords or shift values. If both objects have the same cipher
+        alphabet, they are considered equal.
 
-        If both of object's cipher_alphabet are same which means their Keyword, Number(Shift) are same.
-
-        Not useful in cipher algorithms such as Caesar, Atbash, Rot13, Baconian, and PolybiusSquare as
-        their ciphertext will be exact same because of their fixed mapping.
+        Note:
+            This is less useful for algorithms with fixed mappings like
+            Caesar, Atbash, Rot13, Baconian, and PolybiusSquare, as their
+            mappings are always identical.
 
         Args:
-            other (object): The other object.
+            other (object): The object to compare with.
 
         Returns:
-            bool: True if the two objects are equal, False otherwise.
+            bool: True if the objects are equal, False otherwise.
         """
         # checking if 'other' is the instance of this class
         if not isinstance(other, MonoalphabeticSubstitution):
             return NotImplemented
-        # Two ciphers are equal if their cipher_alphabet dictionaries are exactly the same
+        # Two ciphers are equal if their cipher_alphabet dictionaries are
+        # exactly the same
         return self.mapping == other.mapping
 
 
 class PolyalphabeticSubstitution(Substitution):
-    """A base class for creating Polyalphabetic substitution ciphers."""
+    """A base class for creating polyalphabetic substitution ciphers."""
 
     def __init__(self, key: str):
-        """Uses more than One shift to cipher each char.
+        """Initializes the cipher with a key for multiple shifts.
 
         Args:
-            key (str): The key use to build cipher table(tabula_recta).
+            key (str): The key used to build the cipher table (tabula recta).
         """
         # Call the generation method as a standard function
         self.tabula_recta: list[list[str]] = self._generate_table()
@@ -172,10 +182,10 @@ class PolyalphabeticSubstitution(Substitution):
             raise ValueError("Key must contain at least one letter.")
 
     def _generate_table(self) -> list[list[str]]:
-        """Create a square table of alphabets (Vigenère by default).
+        """Creates a square table of alphabets (Vigenère by default).
 
         Returns:
-            list[list[str]]: A two-dimensional square table of alphabet.
+            list[list[str]]: A 26x26 square table of alphabets.
         """
         tabula_recta: list[list[str]] = []
         for i in range(26):
@@ -187,8 +197,8 @@ class PolyalphabeticSubstitution(Substitution):
     def _get_key_sequence(self) -> list[int]:
         """Maps the keyword to a sequence of integer shifts.
 
-        Extracts all alphabetic characters from the underlying key, converts
-        them to uppercase, and maps them to a 0-25 integer range.
+        Extracts all alphabetic characters from the key, converts them to
+        uppercase, and maps them to a 0-25 integer range.
 
         Returns:
             list[int]: A list of shift values to be used by the cipher.
@@ -206,23 +216,19 @@ class PolyalphabeticSubstitution(Substitution):
 
     @override
     def cipher(self, text: str, omit_non_alpha: bool = False) -> str:
-        """Uses Vigenere table.
+        """Encrypts text using a Vigenère table.
 
-        A two-dimensional 26*26 table,i.e. row and column starts with A-Z. starting with second row and column
-        the letter shifted to left one and goes on as we proceed to next row and column. As we visit to 26th row
-        and column it starts with Z, A, B ... W, X, Y
-
-        To cipher a plain text, we take a character; look into column and take a first character from key and look into
-        the row now create an intersection to get a first cipher character, and we will continue this till we complete
-        ciphering whole plain text.
+        The tabula recta is a 26x26 table where each row is shifted by one
+        position. Encryption is performed by finding the intersection of the
+        plaintext character's column and the key character's row.
 
         Args:
-            text (str): The text to be ciphered.
-            omit_non_alpha (bool, optional): Whether to omit non-alpha characters. Defaults to False; which means
-            don't omit non-alpha characters.
+            text (str): The plaintext string to encrypt.
+            omit_non_alpha (bool): If True, non-alphabetic characters are
+                removed. Defaults to False.
 
         Returns:
-            str: A ciphered string.
+            str: The resulting ciphertext string.
         """
         result: str = ""
         key_cycle: Iterator[int] = cycle(self._get_key_sequence())
@@ -231,7 +237,8 @@ class PolyalphabeticSubstitution(Substitution):
             if char.isalpha():
                 key_char: int = next(key_cycle)
                 row: int = key_char
-                # convert text_char to int then -65 as the ascii upper letters start at 65,
+                # convert text_char to int then -65 as the ascii upper letters
+                # start at 65,
                 # to get the index of the column.
                 column: int = ord(char) - 65
                 result += self.tabula_recta[row][column]
@@ -243,26 +250,21 @@ class PolyalphabeticSubstitution(Substitution):
 
     @override
     def decipher(self, text: str) -> str:
-        """Uses Vigenere table.
+        """Decrypts text using a Vigenère table.
 
-        Take a first character from the key, find that character into Vigenere table's row.
-        Now take first character from cipher text and look into that row's column.
+        Decryption is performed by locating the key character's row in the
+        tabula recta, finding the ciphertext character in that row, and
+        retrieving the corresponding plaintext character from the first row.
 
-        for example:
-        Key = LEMON
-        Ciphertext = CIFFB
-
-        Key first letter = L
-        Ciphertext first letter = C
-
-        Use the Vigenere table, L in row and find C in that row, intersect with column, you will get : R,
-        continue this and plaintext will be RETRO.
+        Example:
+            Key = LEMON, Ciphertext = CIFFB
+            Row 'L', find 'C' -> Column 'R'. Result: RETRO.
 
         Args:
-            text (str): The text to be ciphered.
+            text (str): The ciphertext string to decrypt.
 
         Returns:
-            str: A plaintext / decipher string.
+            str: The resulting plaintext string.
         """
         result: str = ""
         key_cycle: Iterator[int] = cycle(self._get_key_sequence())
@@ -278,19 +280,19 @@ class PolyalphabeticSubstitution(Substitution):
         return result
 
     def __str__(self) -> str:
-        """Prints cipher class name with key associated with it.
+        """Returns the cipher class name and its associated key.
 
         Returns:
-            str: Cipher class name and key.
+            str: A formatted string with the class name and key.
         """
         key: str = self.key
 
         return f"--- {self.__class__.__name__} Cipher ---\nKey:  {key!r}\n"
 
     def __repr__(self) -> str:
-        """Use to recreate instance of cipher class.
+        """Returns a string representation to recreate the cipher object.
 
         Returns:
-            str: Class name with key associated with it.
+            str: A string that can be used to recreate the instance.
         """
         return f"{self.__class__.__name__}(key={self.key!r})"

@@ -1,7 +1,7 @@
-"""Implemented different Monoalphabetic substitution ciphers.
+"""Implementations of various monoalphabetic substitution ciphers.
 
-This module contains Monoalphabetic cipher algorithms, every cipher algorithm produce different cipher_alphabets
-that makes them unique from rest of them.
+This module contains monoalphabetic cipher algorithms, each producing a
+unique cipher alphabet.
 """
 
 __all__: list[str] = [
@@ -23,21 +23,21 @@ from .base import MonoalphabeticSubstitution
 
 
 class Atbash(MonoalphabeticSubstitution):
-    """cipher_alphabet is reverse of alphabet (z-a)."""
+    """The cipher alphabet is the reverse of the standard alphabet (z-a)."""
 
     def __init__(self):
-        """Initialize super class and passes cipher_alphabet."""
+        """Initializes the Atbash cipher with a reversed alphabet."""
         super().__init__(string.ascii_lowercase[::-1])
 
 
 class Shift(MonoalphabeticSubstitution):
-    """Produce cipher_alphabet based on user given shift."""
+    """Produces a cipher alphabet based on a user-defined shift."""
 
     def __init__(self, shift: int):
-        """Initialize super class and passes cipher_alphabet by producing it with user-defined shift.
+        """Initializes the Shift cipher with a user-defined shift.
 
         Args:
-            shift (int): User given shift in integer.
+            shift (int): The integer value to shift the alphabet by.
         """
         base: str = string.ascii_lowercase
         # The modulo ensures shifts larger than 26 wrap around safely
@@ -47,42 +47,47 @@ class Shift(MonoalphabeticSubstitution):
         super().__init__(cipher_alphabet)
 
     def __repr__(self) -> str:
-        """Use to recreate object.
+        """Returns a string representation to recreate the Shift object.
 
         Returns:
-            str: Prints class with user defined shift.
+            str: A string representing the object.
         """
         return f"{self.__class__.__name__}(shift={self.shift})"
 
 
 class Caesar(Shift):
-    """Simplest Monoalphabetic substitution cipher, uses fixed shift of 3."""
+    """A simple monoalphabetic substitution cipher using a fixed shift of 3."""
 
     def __init__(self):
-        """Initialize super class and passes cipher_alphabet by producing it with fixed shift of 3."""
+        """Initializes the Caesar cipher with a fixed shift of 3."""
         super().__init__(shift=3)
 
 
 class Rot13(Shift):
-    """Uses fixed shift of 13."""
+    """A simple monoalphabetic substitution cipher using a fixed shift of 13."""
 
     def __init__(self):
-        """Initialize super class and passes cipher_alphabet by producing it with fixed shift of 13."""
+        """Initializes the Rot13 cipher with a fixed shift of 13."""
         super().__init__(shift=13)
 
 
 class MixedAlphabet(MonoalphabeticSubstitution):
-    """Generate a unique cipher_alphabet each time with different keyword."""
+    """Generates a unique cipher alphabet using a keyword."""
 
     def __init__(self, keyword: str) -> None:
-        """Initialize super class and passes cipher_alphabet by producing it with user-defined keyword.
+        """Initializes the MixedAlphabet cipher with a user-defined keyword.
 
-        The cipher alphabet is created by taking the unique letters(removing recurring letters) of the keyword,
-        followed by the remaining letters of the alphabet in their ascending order.
+        The cipher alphabet is created by taking the unique letters of the
+        keyword, followed by the remaining letters of the alphabet in
+        ascending order.
+
+        Args:
+            keyword (str): The keyword used to generate the cipher alphabet.
         """
         # removing duplicate letter in the keyword to make the cipher_alphanet 26 chars
         self.keyword: str = "".join(filter(str.isalpha, keyword.lower()))
-        # make keyword unique so the cipher alphanet does not include duplicates, and it should 26 exact
+        # make keyword unique so the cipher alphanet does not include duplicates,
+        # and it should 26 exact
         clean_keyword: list[str] = list(dict.fromkeys(self.keyword))
         cipher_alphabet: list[str] = clean_keyword
         # append remaining characters in cipher_alphabet
@@ -93,31 +98,36 @@ class MixedAlphabet(MonoalphabeticSubstitution):
         super().__init__(cipher_alphabet)
 
     def __repr__(self) -> str:
-        """Use to recreate object.
+        """Returns a string representation to recreate the object.
 
         Returns:
-            str: Prints class with user defined keyword.
+            str: A string representing the object.
         """
         return f"{self.__class__.__name__}(keyword={self.keyword!r})"
 
 
 class SimpleSubstitution(MonoalphabeticSubstitution):
-    """One of the simplest substitution cipher.
+    """A simple substitution cipher using a pre-agreed mapping.
 
-    Sender and Receiver need to agree on exact mapping of plain_alphabet with cipher_alphabet. there is no algorithm or
-    tool to generate cipher_alphabet on the parameter such a shift or key; both must memories the cipher_alphabet
-    or write down.
+    The sender and receiver must agree on an exact mapping between the
+    plaintext and cipher alphabets. No algorithm is used to generate the
+    mapping; it must be memorized or recorded.
     """
 
     # user need to know the cipher_alphabet as it is a key to cipher and decipher.
     # user provide one or generate one using a static method.
     def __init__(self, cipher_alphabet: str) -> None:
-        """Uses provided cipher_alphabet to map with plain_alphabet.
+        """Initializes the cipher with a provided cipher alphabet.
 
         Args:
-            cipher_alphabet (str): cipher_alphabet to use.
+            cipher_alphabet (str): The 26-character cipher alphabet to use.
+
+        Raises:
+            ValueError: If the cipher alphabet is not exactly 26 unique
+                characters.
         """
-        # removing duplicate character in cipher_alphabet and making sure it is exactly 26 OR check if the length is 26
+        # removing duplicate character in cipher_alphabet and making sure it is exactly
+        # 26 OR check if the length is 26
         if (
             len(dict.fromkeys(c.lower() for c in cipher_alphabet)) != 26
             or len(cipher_alphabet) != 26
@@ -131,24 +141,24 @@ class SimpleSubstitution(MonoalphabeticSubstitution):
 
     @staticmethod
     def generate_cipher_alphabet() -> str:
-        """Generates a random cipher_alphabet.
+        """Generates a random 26-character cipher alphabet.
 
         Returns:
-            A string representing the random cipher alphabet.
+            str: A random permutation of the lowercase alphabet.
         """
         return "".join(random.sample(string.ascii_lowercase, k=26))
 
     def __repr__(self) -> str:
-        """Use to recreate object.
+        """Returns a string representation to recreate the object.
 
         Returns:
-            str: Prints class with given cipher_alphabet.
+            str: A string representing the object.
         """
         return f"{self.__class__.__name__}(cipher_alphabet={self.cipher_alphabet!r})"
 
 
 class Baconian(MonoalphabeticSubstitution):
-    """A substitution cipher that uses a 5-character binary representation for each letter."""
+    """A substitution cipher using a 5-character binary representation."""
 
     modern_baconian_cipher: list[str] = [
         "aaaaa",  # a
@@ -208,11 +218,12 @@ class Baconian(MonoalphabeticSubstitution):
         "babbb",  # Z
     ]
 
-    def __init__(self, modern_implementation=True) -> None:
+    def __init__(self, modern_implementation: bool = True) -> None:
         """Initializes the Baconian cipher.
 
         Args:
-            modern_implementation: Whether to use the modern or old implementation of the cipher.
+            modern_implementation (bool): Whether to use the modern or classic
+                implementation. Defaults to True.
         """
         self.modern_implementation: bool = modern_implementation
         self.cipher_alphabet: list[str] = (
@@ -224,15 +235,16 @@ class Baconian(MonoalphabeticSubstitution):
 
     @override
     def decipher(self, text: str) -> str:
-        """Decipher the given text.
+        """Decrypts the given text.
 
-        Make a bach of 5-characters, gather the value of it from map and append it in result.
+        Processes the text in 5-character blocks, retrieves the mapped value
+        for each block, and appends it to the result.
 
         Args:
-            text (str): text to decipher.
+            text (str): The ciphertext string to decrypt.
 
         Returns:
-            str: plaintext / deciphered text.
+            str: The resulting plaintext string.
         """
         plain_text = ""
         i = 0
@@ -252,10 +264,10 @@ class Baconian(MonoalphabeticSubstitution):
         return plain_text
 
     def __repr__(self) -> str:
-        """Use to recreate object.
+        """Returns a string representation to recreate the object.
 
         Returns:
-            str: Prints class with boolean value of modern_implementation.
+            str: A string representing the object.
         """
         return f"{self.__class__.__name__}(modern_implementation={self.modern_implementation})"
 
@@ -263,11 +275,10 @@ class Baconian(MonoalphabeticSubstitution):
 class PolybiusSquare(MonoalphabeticSubstitution):
     """A substitution cipher that uses a 5x5 grid to represent each letter.
 
-    A Polybius Square is a 5x5 grid. 5 x 5 = 25 total coordinates (from "11" to "55").
-    However, base_alphabet (the standard English alphabet) has 26 letters. Ancient Greeks and classic cryptographers
-    solved this by making two letters share the exact same cell in the grid. Usually, 'I' and 'J' share a
-    spot (though sometimes 'C' and 'K' share one).To fix this, we pass 26-item list where the coordinates
-    for 'i' and 'j' are identical.
+    A Polybius Square typically uses a 5x5 grid, resulting in 25
+    coordinates. To accommodate the 26-letter English alphabet, two letters
+    (usually 'I' and 'J') share the same cell. This implementation uses a
+    26-item list where 'I' and 'J' have identical coordinates.
     """
 
     cipher_alphabets = [
@@ -300,20 +311,21 @@ class PolybiusSquare(MonoalphabeticSubstitution):
     ]
 
     def __init__(self) -> None:
-        """Initialize super class and passes cipher_alphabet."""
+        """Initializes the Polybius Square cipher."""
         super().__init__(self.cipher_alphabets)
 
     @override
     def decipher(self, text: str) -> str:
-        """Decipher the given text.
+        """Decrypts the given text.
 
-        Make a bach of 2-characters, gather the value of it from map and append it in result.
+        Processes the text in 2-character blocks, retrieves the mapped value
+        for each block, and appends it to the result.
 
         Args:
-            text (str): text to decipher.
+            text (str): The ciphertext string to decrypt.
 
         Returns:
-            str: plaintext / deciphered text.
+            str: The resulting plaintext string.
         """
         plain_text = ""
         i = 0
